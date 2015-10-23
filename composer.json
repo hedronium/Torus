@@ -1,0 +1,18 @@
+{
+    "name": "hedronium/torus",
+    "description": "An EventLoop Implementation in PHP",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Omran Jamal",
+            "email": "o.jamal97@gmail.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "hedronium\\Torus\\": "src/"
+        }
+    }
+}
