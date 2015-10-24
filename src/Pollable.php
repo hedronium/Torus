@@ -44,8 +44,8 @@ class Pollable
 	public function handle(Event $event)
 	{
 		$data = $event->data();
-		foreach ($handlers[$event->type()] as $handler) {
-			$handler($data);
+		foreach ($this->handlers[$event->type()] as $handler) {
+			$handler($event);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 <?php
-namespace hedronium\Torus\Eventful;
+namespace hedronium\Torus;
 
 abstract class Eventful
 {
@@ -7,6 +7,8 @@ abstract class Eventful
 	protected $objHash = null;
 
 	abstract public function poll();
+
+	public function boot(){}
 
 	public function getObjHash()
 	{
@@ -24,7 +26,7 @@ abstract class Eventful
 		}
 	}
 
-	protected function trigger($event, $data)
+	protected function trigger($event, $data = null)
 	{
 		$this->loop->pushEvent($this, $event, $data);
 	}

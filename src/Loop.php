@@ -7,10 +7,33 @@ class Loop
 {
     protected $pollables = [];
     protected $queue = [];
+    protected $time = 0;
+
+    public function time()
+    {
+        return $this->time;
+    }
+
+    public function remove(Eventful $obj)
+    {
+        $hash = $obj->getObjHash();
+
+        if (isset($this->pollables[$hash])) {
+            array_splice(
+                $this->pollables, 
+                array_search(
+                    $hash,
+                    array_keys($this->pollables)
+                ),
+                1
+            );
+        }
+    }
 
     public function commit(Eventful $obj)
     {
         $this->pollables[$obj->getObjHash()] = new Pollable($obj);
+        $obj->boot();
     }
 
     public function register(Eventful $obj)
@@ -27,8 +50,8 @@ class Loop
 
     protected function handle()
     {
-        foreach ($this->queue as $event) {
-            $pollable->handle($event);
+        while ($event = array_shift($this->queue)) {
+            $this->pollables[$event->getObjHash()]->handle($event);
         }
     }
 
@@ -47,6 +70,32 @@ class Loop
         $this->pollables[$obj->getObjHash()]->removeHandler($event, $callback);
     }
 
+    public function setTimeout(callable $callback, $timeout)
+    {
+        $timeout = new Timeout($callback, $timeout);
+        $timeout->register($this);
+
+        return $timeout;
+    }
+
+    public function clearTimeout(Timeout $timeout)
+    {
+        $this->remove($timeout);
+    }
+
+    public function setInterval(callable $callback, $interval)
+    {
+        $interval = new Interval($callback, $interval);
+        $interval->register($this);
+
+        return $interval;
+    }
+
+    public function clearInterval(Interval $interval)
+    {
+        $this->remove($interval);
+    }
+
     public function run($rate)
     {
         $last_tick = 0;
@@ -59,6 +108,8 @@ class Loop
             if (($last_tick+$interval)>$time) {
                 usleep($sleep_rate);
             }
+
+            $this->time = $time;
 
             $this->poll();
             $this->handle();
