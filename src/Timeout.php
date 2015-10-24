@@ -39,4 +39,9 @@ class Timeout extends Eventful
 
 		$this->trigger('done');
 	}
+
+	public function cancel()
+	{
+		$this->loop->remove($this);
+	}
 }
