@@ -19,6 +19,6 @@ class Event
 
 	public function data()
 	{
-		return $this->$data;
+		return $this->data;
 	}
 }

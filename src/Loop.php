@@ -30,7 +30,7 @@ class Loop
         return $events;
     }
 
-    public function addEmitter($emits, callable $emitter, $rate)
+    public function addEmitter($emits, callable $emitter, $rate = 0)
     {
         $events = $this->events($emits);
 
@@ -110,7 +110,9 @@ class Loop
 
     public function run($rate = 0)
     {
-        $rate *= 1000;
+        $rate /= 1000;
+        $sleep_rate = ($rate*1000)/2;
+        $last_tick = 0;
 
         $time = microtime(true);
 
@@ -120,6 +122,12 @@ class Loop
 
         while (true) {
             $time = microtime(true);
+
+            if (($last_tick+$rate) > $time) {
+                usleep($sleep_rate);
+                continue;
+            }
+
             $queue = [];
 
             foreach ($this->emitters as $emitter) {
@@ -146,7 +154,7 @@ class Loop
                 $interval->run($time);
             }
 
-            usleep($rate);
+            $last_tick = $time;
         }
     }
 }
