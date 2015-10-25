@@ -27,8 +27,8 @@ class Timeout extends Eventful
 			$event->object()->run();
 		});
 
-		$this->on('done', function (Event $event) use ($loop) {
-			$loop->remove($event->object());
+		$this->on('done', function (Event $event) {
+			$this->loop->remove($this);
 		});
 	}
 
@@ -36,7 +36,7 @@ class Timeout extends Eventful
 	{
 		$x = $this->callback;
 		$x();
-
+		
 		$this->trigger('done');
 	}
 

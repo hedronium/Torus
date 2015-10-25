@@ -37,10 +37,11 @@ abstract class Eventful
 		$loop->commit($this);
 	}
 
-	public function on($event, callable $callback)
+	public function on($event, callable $callback, $bind = false)
 	{
 		$this->checkEventLoopRegistrationStatus();
-		$this->loop->listen($event, $this, $callback);
+		
+		$this->loop->listen($event, $this, $callback, $bind);
 	}
 
 	public function off($event, callable $callback)

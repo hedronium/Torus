@@ -31,7 +31,7 @@ class Interval extends Eventful
 	public function run()
 	{
 		$this->last_run = $this->loop->time();
-
+		
 		$x = $this->callback;
 		$x();
 	}

@@ -16,13 +16,19 @@ class Pollable
 		$this->obj->poll();
 	}
 
-	public function addHandler($event, callable $callback)
+	public function addHandler($event, callable $callback, $bind = false)
 	{
 		if (!isset($this->handlers[$event])) {
 			$this->handlers[$event] = [];
 		}
 
-		$this->handlers[$event][spl_object_hash($callback)] = $callback;
+		$hash = spl_object_hash($callback);
+
+		if ($bind) {
+			$callback = $callback->bindTo($this->obj);
+		}
+
+		$this->handlers[$event][$hash] = $callback;
 	}
 
 	public function removeHandler($event, callable $callback)
@@ -43,8 +49,13 @@ class Pollable
 
 	public function handle(Event $event)
 	{
+		$type = $event->type();
+		if (!isset($this->handlers[$type])) {
+			return;
+		}
+
 		$data = $event->data();
-		foreach ($this->handlers[$event->type()] as $handler) {
+		foreach ($this->handlers[$type] as $handler) {
 			$handler($event);
 		}
 	}

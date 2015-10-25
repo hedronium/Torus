@@ -51,6 +51,10 @@ class Loop
     protected function handle()
     {
         while ($event = array_shift($this->queue)) {
+            if (!isset($this->pollables[$event->getObjHash()])) {
+                continue;
+            }
+
             $this->pollables[$event->getObjHash()]->handle($event);
         }
     }
@@ -60,9 +64,9 @@ class Loop
         $this->queue[] = new Event($obj, $event, $data);
     }
 
-    public function listen($event, Eventful $obj, callable $callback)
+    public function listen($event, Eventful $obj, callable $callback, $bind = false)
     {
-        $this->pollables[$obj->getObjHash()]->addHandler($event, $callback);
+        $this->pollables[$obj->getObjHash()]->addHandler($event, $callback, $bind);
     }
 
     public function stopListening($event, Eventful $obj, callable $callback)
