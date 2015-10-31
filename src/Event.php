@@ -1,37 +1,30 @@
 <?php
-namespace hedronium\Torus;
+namespace Hedronium\Torus;
 
 class Event
 {
-	protected $objHash = '';
 	protected $obj = '';
 	protected $event = '';
 	protected $data = null;
 
-	public function __construct(Eventful $obj, $event, $data = null)
+	public function __construct(Pollable $obj, $event, $data = null)
 	{
-		$this->objHash = $obj->getObjHash();
 		$this->obj = $obj;
 		$this->event = $event;
 		$this->data = $data;
 	}
 
-	public function object()
+	public function getObject()
 	{
 		return $this->obj;
 	}
 
-	public function getObjHash()
-	{
-		return $this->objHash;
-	}
-
-	public function data()
+	public function getData()
 	{
 		return $this->data;
 	}
 
-	public function type()
+	public function getType()
 	{
 		return $this->event;
 	}

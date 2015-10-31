@@ -1,5 +1,8 @@
 <?php
-namespace hedronium\Torus;
+namespace Hedronium\Torus;
+
+use SplObjectStorage;
+use Closure;
 
 class Pollable
 {
@@ -16,45 +19,32 @@ class Pollable
 		$this->obj->poll();
 	}
 
-	public function addHandler($event, callable $callback, $bind = false)
+	public function getObject()
 	{
-		if (!isset($this->handlers[$event])) {
-			$this->handlers[$event] = [];
-		}
 
-		$hash = spl_object_hash($callback);
-
-		if ($bind) {
-			$callback = $callback->bindTo($this->obj);
-		}
-
-		$this->handlers[$event][$hash] = $callback;
 	}
 
-	public function removeHandler($event, callable $callback)
+	public function addHandler($event, Closure $callback)
 	{
-		$hash = spl_object_hash($callback);
-
-		if (isset($this->handlers[$event][$hash])) {
-			array_splice(
-				$this->handlers[$event], 
-				array_search(
-					$hash,
-					array_keys($this->handlers[$event])
-				),
-				1
-			);
+		if (!isset($this->handlers[$event])) {
+			$this->handlers[$event] = new SplObjectStorage;
 		}
+
+		$this->handlers[$event]->attach($callback);
+	}
+
+	public function removeHandler($event, Closure $callback)
+	{
+		$this->handlers[$event]->detach($callback);
 	}
 
 	public function handle(Event $event)
 	{
-		$type = $event->type();
+		$type = $event->getType();
 		if (!isset($this->handlers[$type])) {
 			return;
 		}
 
-		$data = $event->data();
 		foreach ($this->handlers[$type] as $handler) {
 			$handler($event);
 		}

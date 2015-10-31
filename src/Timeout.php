@@ -1,12 +1,14 @@
 <?php
-namespace hedronium\Torus;
+namespace Hedronium\Torus;
+
+use Closure;
 
 class Timeout extends Eventful
 {
 	protected $callback = null;
 	protected $timeout = 0;
 
-	public function __construct(callable $callback, $timeout)
+	public function __construct(Closure $callback, $timeout)
 	{
 		$this->callback = $callback;
 		$this->timeout = microtime(true)+($timeout/1000);
@@ -15,7 +17,7 @@ class Timeout extends Eventful
 	public function poll()
 	{
 		if ($this->timeout <= $this->loop->time()) {
-			$this->trigger('timeout');
+			$this->emit('timeout');
 		}
 	}
 
@@ -24,12 +26,12 @@ class Timeout extends Eventful
 		$loop = $this->loop;
 
 		$this->on('timeout', function (Event $event) {
-			$event->object()->run();
-		});
+			$this->run();
+		}, true);
 
 		$this->on('done', function (Event $event) {
 			$this->loop->remove($this);
-		});
+		}, true);
 	}
 
 	public function run()
@@ -37,11 +39,13 @@ class Timeout extends Eventful
 		$x = $this->callback;
 		$x();
 		
-		$this->trigger('done');
+		$this->emit('done');
 	}
 
 	public function cancel()
 	{
-		$this->loop->remove($this);
+		if ($this->loop) {
+			$this->loop->remove($this);
+		}
 	}
 }

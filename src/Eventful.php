@@ -1,51 +1,79 @@
 <?php
-namespace hedronium\Torus;
+namespace Hedronium\Torus;
+
+use Closure;
 
 abstract class Eventful
 {
 	protected $loop = null;
-	protected $objHash = null;
+	protected $pollable_obj = null;
 
-	abstract public function poll();
-
-	public function boot(){}
-
-	public function getObjHash()
+	public function __construct()
 	{
-		if ($this->objHash) {
-			return $this->objHash;
-		}
+		$instance = EventLoop::instance();
 
-		return $this->objHash = spl_object_hash($this);
+		if ($instance->shouldAutoRegister()) {
+			$this->register($instance);
+		}
 	}
 
-	protected function checkEventLoopRegistrationStatus()
+	public function __destruct()
+	{
+		if ($this->loop) {
+			$this->loop->remove($this);
+		}
+	}
+
+	public function register(EventLoop $loop)
+	{
+		$this->loop = $loop;
+		$loop->commit($this);
+	}
+
+	public function getPollableObject()
+	{
+		return $this->pollable_obj;
+	}
+
+	public function setPollableObject(Pollable $pollable = null)
+	{
+		$this->pollable_obj = $pollable;
+	}
+
+	protected function isLoopRegistered()
 	{
 		if ($this->loop === null) {
 			throw new \Exception('Not Registered to event loop.');
 		}
 	}
 
-	protected function trigger($event, $data = null)
+	protected function emit($event, $data = null, $priority = 0)
 	{
-		$this->loop->pushEvent($this, $event, $data);
+		$this->loop->pushEvent($this->pollable_obj, $event, $data, $priority);
 	}
 
-	public function register(Loop $loop)
+	public function trigger($event, $data = null)
 	{
-		$this->loop = $loop;
-		$loop->commit($this);
+		$this->emit($event, $data);
 	}
 
-	public function on($event, callable $callback, $bind = false)
+	public function on($event, Closure $callback, $bind = false)
 	{
-		$this->checkEventLoopRegistrationStatus();
-		
-		$this->loop->listen($event, $this, $callback, $bind);
+		$this->isLoopRegistered();
+
+		if ($bind) {
+			$callback = $callback->bindTo($this);
+		}
+
+		$this->pollable_obj->addHandler($event, $callback);
 	}
 
-	public function off($event, callable $callback)
+	public function off($event, Closure $callback)
 	{
-		$this->loop->stopListening($this, $callback);
+		$this->pollable_obj->removeHandler($event, $callback);
 	}
+
+	public function boot(){}
+
+	abstract public function poll();
 }

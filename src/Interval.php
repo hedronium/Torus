@@ -1,5 +1,7 @@
 <?php
-namespace hedronium\Torus;
+namespace Hedronium\Torus;
+
+use Closure;
 
 class Interval extends Eventful
 {
@@ -7,7 +9,7 @@ class Interval extends Eventful
 	protected $interval = 0;
 	protected $last_run = 0;
 
-	public function __construct(callable $callback, $interval)
+	public function __construct(Closure $callback, $interval)
 	{
 		$this->callback = $callback;
 		$this->interval = ($interval/1000);
@@ -24,8 +26,8 @@ class Interval extends Eventful
 	public function boot()
 	{
 		$this->on('interval', function (Event $event) {
-			$event->object()->run();
-		});
+			$this->run();
+		}, true);
 	}
 
 	public function run()
@@ -38,6 +40,8 @@ class Interval extends Eventful
 
 	public function cancel()
 	{
-		$this->loop->remove($this);
+		if ($this->loop) {
+			$this->loop->remove($this);
+		}
 	}
 }
